@@ -1,0 +1,48 @@
+import streamlit as st
+import fitz
+import io
+import datetime
+from docx import Document
+
+st.set_page_config(page_title='Teacher Toolkit CM', layout='wide')
+st.title('Teacher Toolkit CM - CS & ICT')
+st.success('For Form 1 to Upper Sixth - GCE & CBA')
+
+subject = st.sidebar.selectbox('Subject', ['Computer Science', 'ICT'])
+level = st.sidebar.selectbox('Level', ['Form 1','Form 2','Form 3','Form 4','Form 5','Lower Sixth','Upper Sixth'])
+
+tab1, tab2, tab3 = st.tabs(['CBA Lesson Plan', 'PDF to Word', 'GCE Answers'])
+
+with tab1:
+    topic = st.text_input('Topic / Title', 'Types of Program Translators')
+    duration = st.selectbox('Duration', ['45 mins','90 mins','180 mins practical'])
+    situation = st.text_area('Learning Situation', 'A small business in Yaounde needs to automate stock.')
+    if st.button('Generate Lesson Plan', type='primary'):
+        today = str(datetime.date.today())
+        plan = f"LESSON PLAN\nSubject: {subject}\nClass: {level}\nTopic: {topic}\nDate: {today}\nDuration: {duration}\n\nI. COMPETENCE: Solve problems using digital tools\nII. SITUATION: {situation}\nIII. OBJECTIVES: Define {topic}, types, application\nIV. PROCESS: Intro 15m, Development 60m, Conclusion 15m\nV. EVALUATION: Define {topic} [2m], Types [2m]\n"
+        st.text_area('Your Lesson Plan', plan, height=400)
+        doc = Document()
+        doc.add_heading(f'{subject} - {level} - {topic}', 0)
+        doc.add_paragraph(plan)
+        bio = io.BytesIO()
+        doc.save(bio)
+        st.download_button('Download Word File', bio.getvalue(), file_name='Lesson.docx')
+
+with tab2:
+    st.header('GCE PDF to Word')
+    pdf = st.file_uploader('Upload PDF', type=['pdf'])
+    if pdf and st.button('Convert PDF'):
+        pdf_doc = fitz.open(stream=pdf.read(), filetype='pdf')
+        text = "\n".join([p.get_text() for p in pdf_doc])
+        doc = Document()
+        doc.add_paragraph(text)
+        out = io.BytesIO()
+        doc.save(out)
+        st.download_button('Download DOCX', out.getvalue(), file_name='GCE_Converted.docx')
+
+with tab3:
+    st.header('GCE Answer Generator')
+    q = st.text_area('Paste GCE Question', 'Distinguish between compiler and interpreter [4m]')
+    if st.button('Generate Answer'):
+        st.write('QUESTION: ' + q)
+        st.markdown('**ANSWER GUIDE:**\n1. Compiler whole program, Interpreter line by line\n2. Compiler faster runtime\n3. Compiler all errors, Interpreter stops at first\n4. C/C++ = Compiler, Python = Interpreter')
